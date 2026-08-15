@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>成就弹窗 · 方案草稿</title>
+<style>
+@font-face{
+  font-family:"HarmonyOS Sans SC";
+  src:url("fonts/harmonyos-sans-sc-regular.woff2") format("woff2");
+  font-weight:400; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"HarmonyOS Sans SC";
+  src:url("fonts/harmonyos-sans-sc-bold.woff2") format("woff2");
+  font-weight:700; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"Source Han Serif SC";
+  src:url("fonts/source-han-serif-sc-regular.woff2") format("woff2");
+  font-weight:400; font-style:normal; font-display:swap;
+}
+:root{
+  --bg:#141414; --yellow:#F2C200; --gold:#E8C36A;
+  --font-sans:"HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
+  --font-serif:"Source Han Serif SC","SimSun",serif;
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{
+  min-height:100vh;
+  background:radial-gradient(120% 100% at 50% 0%, #242424, #101010 70%);
+  color:#fff;
+  font-family:var(--font-sans);
+  padding:8vh 5vw 10vh;
+}
+h1{ text-align:center; font-size:clamp(24px,3.6vw,38px); letter-spacing:.2em; }
+p.sub{ margin-top:10px; text-align:center; color:#8a8a86; font-size:12px; letter-spacing:.3em; }
+.schemes{
+  margin-top:44px;
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:20px;
+  max-width:1180px; margin-left:auto; margin-right:auto;
+}
+.scheme{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+  padding:20px;
+  display:flex; flex-direction:column; gap:12px;
+}
+.scheme h2{ font-size:15px; letter-spacing:.1em; color:var(--gold); }
+.scheme p{ font-size:12px; line-height:1.8; color:#b9b9b4; flex:1; }
+.scheme button{
+  align-self:flex-start;
+  background:none; border:1px solid rgba(255,255,255,.35);
+  color:#fff; font-size:12px; letter-spacing:.18em;
+  padding:8px 18px; border-radius:999px; cursor:pointer;
+  transition:background .3s, color .3s, border-color .3s;
+}
+.scheme button:hover{ background:#fff; color:#111; border-color:#fff; }
+
+/* ===== 方案A：Minecraft 方块弹窗（右上角） ===== */
+.pop-a{
+  position:fixed; top:18px; right:18px; z-index:50;
+  width:min(300px, 86vw);
+  background:rgba(16,16,16,.96);
+  border:3px solid #fff;
+  box-shadow:0 0 0 3px #000, 0 14px 44px rgba(0,0,0,.6);
+  padding:14px 16px;
+  opacity:0; transform:translateY(-16px) scale(.9);
+  transition:opacity .25s, transform .25s;
+  pointer-events:none;
+}
+.pop-a.show{ opacity:1; transform:none; }
+.pop-a .t{ color:#aaa; font-size:11px; letter-spacing:.2em; }
+.pop-a .n{ margin-top:4px; font-size:15px; font-weight:700; letter-spacing:.06em; color:#fff; }
+.pop-a .d{ margin-top:4px; font-size:12px; color:#cfcfc8; }
+
+/* ===== 方案B：Steam 奖杯滑入（中下方） ===== */
+.pop-b{
+  position:fixed; bottom:0; left:50%; z-index:50;
+  transform:translate(-50%, 130%);
+  display:flex; align-items:center; gap:14px;
+  background:linear-gradient(180deg, #2b2b2b, #171717);
+  border-top:1px solid #5a5a55;
+  border-left:1px solid #4a4a46;
+  border-right:1px solid #4a4a46;
+  border-radius:14px 14px 0 0;
+  padding:16px 30px 18px;
+  box-shadow:0 -10px 60px rgba(0,0,0,.7);
+  transition:transform .6s cubic-bezier(.22,.61,.36,1);
+  max-width:min(480px, 92vw);
+}
+.pop-b.show{ transform:translate(-50%, 0); }
+.pop-b .cup{
+  width:52px; height:52px; flex:none;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #ffe9a8, #d9a43a 70%);
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px;
+  box-shadow:0 0 26px rgba(255,210,110,.6);
+}
+.pop-b .t{ color:var(--gold); font-size:11px; letter-spacing:.3em; }
+.pop-b .n{ margin-top:3px; font-size:17px; font-weight:700; color:#fff; }
+.pop-b .d{ margin-top:3px; font-size:12px; color:#b9b9b4; }
+
+/* ===== 方案C：居中贺卡 + 粒子 ===== */
+.pop-c{
+  position:fixed; top:50%; left:50%; z-index:50;
+  transform:translate(-50%, -50%) scale(.82);
+  width:min(380px, 90vw);
+  background:rgba(20,20,20,.97);
+  border:2px solid var(--yellow);
+  border-radius:18px;
+  padding:26px 24px 24px;
+  text-align:center;
+  opacity:0;
+  transition:opacity .3s, transform .35s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;
+}
+.pop-c.show{ opacity:1; transform:translate(-50%, -50%) scale(1); }
+.pop-c .cup{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:72px; height:72px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #ffe9a8, #d9a43a 70%);
+  font-size:38px;
+  box-shadow:0 0 40px rgba(255,210,110,.65);
+}
+.pop-c .t{ margin-top:12px; color:var(--gold); font-size:11px; letter-spacing:.34em; }
+.pop-c .n{ margin-top:6px; font-size:20px; font-weight:700; color:#fff; }
+.pop-c .d{ margin-top:8px; font-size:13px; color:#b9b9b4; line-height:1.7; }
+.pop-c .rays{ position:absolute; inset:-40px; background:
+  repeating-conic-gradient(from 0deg, rgba(255,215,120,.10) 0deg 8deg, transparent 8deg 16deg);
+  border-radius:50%; animation:spin 14s linear infinite; z-index:-1; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.particles{ position:fixed; inset:0; z-index:49; pointer-events:none; overflow:hidden; }
+.particles i{
+  position:absolute; bottom:-10px;
+  width:6px; height:6px; border-radius:50%;
+  background:var(--yellow);
+  animation:rise 2.4s linear forwards;
+  opacity:0;
+}
+@keyframes rise{
+  0%{ transform:translateY(0); opacity:0; }
+  10%{ opacity:.9; }
+  100%{ transform:translateY(-110vh); opacity:0; }
+}
+
+/* ===== 方案D：左侧竖条 ===== */
+.pop-d{
+  position:fixed; left:0; top:50%; z-index:50;
+  transform:translate(-110%, -50%);
+  width:min(320px, 84vw);
+  background:rgba(16,16,16,.95);
+  border-left:4px solid #7ED321;
+  border-top:1px solid rgba(255,255,255,.2);
+  border-bottom:1px solid rgba(255,255,255,.2);
+  border-right:1px solid rgba(255,255,255,.2);
+  border-radius:0 14px 14px 0;
+  padding:16px 20px;
+  box-shadow:16px 0 46px rgba(0,0,0,.55);
+  transition:transform .5s cubic-bezier(.22,.61,.36,1);
+  display:flex; gap:12px; align-items:center;
+}
+.pop-d.show{ transform:translate(0, -50%); }
+.pop-d .dot{
+  width:10px; height:10px; flex:none; border-radius:50%;
+  background:#7ED321; box-shadow:0 0 14px rgba(126,211,33,.9);
+}
+.pop-d .n{ font-size:15px; font-weight:700; color:#fff; }
+.pop-d .d{ margin-top:3px; font-size:12px; color:#b9b9b4; }
+
+/* ===== 方案 E：B 的外观 × A 的动效 ===== */
+.pop-e{
+  position:fixed; top:18px; right:18px; z-index:50;
+  transform:translateY(-160%);
+  display:flex; align-items:center; gap:14px;
+  background:linear-gradient(180deg, #2b2b2b, #171717);
+  border:2px solid #4a4a46;
+  border-radius:16px;
+  padding:16px 26px 16px 16px;
+  box-shadow:0 0 0 3px #000, 0 18px 60px rgba(0,0,0,.65), 0 0 34px rgba(255,255,255,.08);
+  max-width:min(480px, 92vw);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease-out, transform .34s cubic-bezier(.34,1.56,.64,1);
+}
+.pop-e.show{ opacity:1; transform:translateY(0); }
+.pop-e .cup{
+  width:54px; height:54px; flex:none;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #ffe9a8, #d9a43a 70%);
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px;
+  box-shadow:0 0 26px rgba(255,210,110,.6);
+}
+.pop-e .t{ color:var(--gold); font-size:11px; letter-spacing:.3em; }
+.pop-e .n{ margin-top:3px; font-size:17px; font-weight:700; color:#fff; }
+.pop-e .d{ margin-top:3px; font-size:12px; color:#b9b9b4; }
+</style>
+</head>
+<body>
+<h1>成就弹窗 · 方案草稿</h1>
+<p class="sub">点击各方案的按钮预览触发效果 · 选定后我会把对应方案实装到主站</p>
+
+<div class="schemes">
+  <div class="scheme">
+    <h2>方案 A · 方块弹窗（MC 风）</h2>
+    <p>右上角深色方块，白色粗边框 + 黑色描边，出现时轻微"咔哒"缩放。成就名灰字在上、描述白字在下。克制、像素感。</p>
+    <button data-a>预览方案 A</button>
+  </div>
+  <div class="scheme">
+    <h2>方案 B · 奖杯滑入（Steam 风）</h2>
+    <p>屏幕中下方，金色奖杯 + 光晕，从底部整块滑入、停留数秒后滑出。像 Steam 卡牌掉落，仪式感最强。</p>
+    <button data-b>预览方案 B</button>
+  </div>
+  <div class="scheme">
+    <h2>方案 C · 居中贺卡 + 粒子</h2>
+    <p>居中卡片，主题色描边、背后旋转光芒，出现时弹性弹出并飘落金色粒子。庆祝感最强，适合"一周目完成"大事件。</p>
+    <button data-c>预览方案 C</button>
+  </div>
+  <div class="scheme">
+    <h2>方案 D · 左侧竖条（极简）</h2>
+    <p>左侧窄条滑出，绿色状态点 + 成就名 + 描述。存在感最低、最安静，适合连续解锁多个成就时不打断阅读。</p>
+    <button data-d>预览方案 D</button>
+  </div>
+  <div class="scheme">
+    <h2>方案 E · B 的外观 × A 的动效</h2>
+    <p>采用方案 B 的奖杯横条外观（金色奖杯圆底 + 深色渐变条 + 成就名/描述），动效采用方案 A 的运动：从右上角自上而下滑出，略带弹性，短促有力。</p>
+    <button data-e>预览方案 E</button>
+  </div>
+</div>
+
+<!-- 方案 A -->
+<div class="pop-a" id="popA">
+  <div class="t">成就解锁</div>
+  <div class="n">翡翠石料！</div>
+  <div class="d">线材接口上的红油，久经沙场竟变成了翡翠。</div>
+</div>
+<!-- 方案 B -->
+<div class="pop-b" id="popB">
+  <span class="cup">🏆</span>
+  <div>
+    <div class="t">成就解锁</div>
+    <div class="n">翡翠石料！</div>
+    <div class="d">线材接口上的红油，久经沙场竟变成了翡翠。</div>
+  </div>
+</div>
+<!-- 方案 C -->
+<div class="particles" id="parts" style="display:none"></div>
+<div class="pop-c" id="popC">
+  <span class="rays"></span>
+  <span class="cup">🏆</span>
+  <div class="t">成就解锁</div>
+  <div class="n">翡翠石料！</div>
+  <div class="d">线材接口上的红油，久经沙场竟变成了翡翠。</div>
+</div>
+<!-- 方案 D -->
+<div class="pop-d" id="popD">
+  <span class="dot"></span>
+  <div>
+    <div class="n">翡翠石料！</div>
+    <div class="d">线材接口上的红油，久经沙场竟变成了翡翠。</div>
+  </div>
+</div>
+<!-- 方案 E -->
+<div class="pop-e" id="popE">
+  <span class="cup">🏆</span>
+  <div>
+    <div class="t">成就解锁</div>
+    <div class="n">翡翠石料！</div>
+    <div class="d">线材接口上的红油，久经沙场竟变成了翡翠。</div>
+  </div>
+</div>
+
+<script>
+const A = document.getElementById("popA");
+const B = document.getElementById("popB");
+const C = document.getElementById("popC");
+const D = document.getElementById("popD");
+const E = document.getElementById("popE");
+const parts = document.getElementById("parts");
+let timer;
+
+function reset(){
+  [A, B, C, D, E].forEach(el => el.classList.remove("show"));
+  parts.style.display = "none";
+  parts.innerHTML = "";
+  clearTimeout(timer);
+}
+function fire(el, ms){
+  reset();
+  el.classList.add("show");
+  timer = setTimeout(() => el.classList.remove("show"), ms);
+}
+function burst(){
+  parts.style.display = "block";
+  for (let i = 0; i < 26; i++){
+    const s = document.createElement("i");
+    s.style.left = (8 + Math.random() * 84) + "vw";
+    s.style.animationDuration = (1.8 + Math.random() * 1.4) + "s";
+    s.style.animationDelay = (Math.random() * .5) + "s";
+    parts.appendChild(s);
+  }
+  setTimeout(() => { parts.style.display = "none"; parts.innerHTML = ""; }, 3400);
+}
+
+document.querySelector("[data-a]").addEventListener("click", () => fire(A, 3200));
+document.querySelector("[data-b]").addEventListener("click", () => fire(B, 4200));
+document.querySelector("[data-c]").addEventListener("click", () => { burst(); fire(C, 4200); });
+document.querySelector("[data-d]").addEventListener("click", () => fire(D, 3200));
+document.querySelector("[data-e]").addEventListener("click", () => fire(E, 3600));
+</script>
+</body>
+</html>

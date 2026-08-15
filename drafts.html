@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>目录卡片 · 构图草案</title>
+<style>
+@font-face{
+  font-family:"HarmonyOS Sans SC";
+  src:url("fonts/harmonyos-sans-sc-regular.woff2") format("woff2");
+  font-weight:400; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"HarmonyOS Sans SC";
+  src:url("fonts/harmonyos-sans-sc-bold.woff2") format("woff2");
+  font-weight:700; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"Source Han Serif SC";
+  src:url("fonts/source-han-serif-sc-regular.woff2") format("woff2");
+  font-weight:400; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"Source Han Serif SC";
+  src:url("fonts/source-han-serif-sc-bold.woff2") format("woff2");
+  font-weight:700; font-style:normal; font-display:swap;
+}
+:root{
+  --bg:#1A1A1A;
+  --accent:#F2C200;
+  --gray:#B8B8B3;
+  --gray-dim:#8A8A86;
+  --font-serif:"Source Han Serif SC","Songti SC","SimSun",serif;
+  --font-sans:"HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{
+  min-height:100vh;
+  color:#fff;
+  font-family:var(--font-sans);
+  background:
+    radial-gradient(130% 100% at 50% 0%, #242424 0%, #1A1A1A 52%, #0F0F0F 100%) fixed,
+    #0F0F0F;
+  padding:9vh 5vw 12vh;
+}
+.page-title{
+  text-align:center;
+  font-size:clamp(24px, 3.6vw, 38px);
+  font-weight:700; letter-spacing:.24em; text-indent:.24em;
+}
+.page-sub{
+  margin-top:14px;
+  text-align:center;
+  color:var(--gray-dim);
+  font-size:12px; letter-spacing:.3em; text-indent:.3em;
+}
+.grid{
+  margin-top:clamp(40px, 7vh, 70px);
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+  gap:34px;
+  max-width:1240px;
+  margin-left:auto; margin-right:auto;
+}
+.draft-card{
+  display:flex; flex-direction:column;
+}
+.card{ flex:1; }
+.draft-tag{
+  margin-bottom:14px;
+  color:var(--accent);
+  font-size:13px; letter-spacing:.3em; text-indent:.3em;
+}
+.draft-note{
+  margin-top:14px;
+  color:var(--gray);
+  font-size:12px; line-height:1.9;
+}
+.card{
+  background:linear-gradient(165deg, #242424, #1E1E1E);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:22px;
+  padding:20px;
+  display:flex; flex-direction:column; gap:13px;
+}
+.card-no{
+  color:var(--gray);
+  font-size:11px; letter-spacing:.3em;
+}
+.card-title{
+  font-size:20px; font-weight:700; letter-spacing:.06em;
+}
+.card-meta{
+  color:var(--gray-dim);
+  font-size:11px; letter-spacing:.1em;
+}
+img{ display:block; }
+
+/* 当前版（0） */
+.card-visual{
+  display:flex; align-items:center; justify-content:center;
+}
+.badge-circle{
+  width:84px; height:84px;
+  border-radius:50%;
+  background:#fff;
+  padding:5px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 10px 26px rgba(0,0,0,.4);
+}
+.badge-circle img{ max-width:100%; max-height:100%; }
+
+/* 方案A：展柜式 */
+.glass-visual{
+  position:relative;
+  background:linear-gradient(150deg, rgba(255,255,255,.42), rgba(255,255,255,.16));
+  -webkit-backdrop-filter:blur(18px) saturate(1.15);
+  backdrop-filter:blur(18px) saturate(1.15);
+  border:1px solid rgba(255,255,255,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3), inset 0 -1px 0 rgba(255,255,255,.08), 0 18px 44px rgba(0,0,0,.38);
+  overflow:hidden;
+}
+.glass-visual::before{
+  content:"";
+  position:absolute; inset:0;
+  background:radial-gradient(85% 75% at 50% 36%, rgba(255,255,255,.4), rgba(255,255,255,.08) 58%, rgba(255,255,255,0) 76%);
+}
+.glass-visual::after{
+  content:"";
+  position:absolute; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  opacity:.16;
+  mix-blend-mode:overlay;
+  pointer-events:none;
+}
+.glass-visual img{ position:relative; z-index:1; }
+.card-a .card-visual{
+  height:235px;
+  border-radius:15px;
+  padding:16px;
+  display:flex; align-items:center; justify-content:center;
+}
+.card-a .card-visual img{ max-width:100%; max-height:100%; object-fit:contain; }
+
+/* 方案B：大徽章式 */
+.card-b{ align-items:center; text-align:center; }
+.card-b .card-visual{ padding:10px 0 4px; }
+.badge-big{
+  width:172px; height:172px;
+  border-radius:50%;
+  padding:14px;
+  display:flex; align-items:center; justify-content:center;
+}
+.badge-big img{ max-width:100%; max-height:100%; }
+
+/* 方案C：封面海报式 */
+.card-c{ padding:0; overflow:hidden; }
+.card-c .card-visual{
+  height:300px;
+  display:flex; align-items:center; justify-content:center;
+}
+.card-c .card-visual img{
+  max-width:86%; max-height:62%;
+  object-fit:contain;
+  transform:translateY(-10%);
+}
+.card-c .card-copy{
+  position:absolute; left:0; right:0; bottom:0;
+  z-index:2;
+  padding:86px 20px 22px;
+  background:linear-gradient(to top, #141414 62%, rgba(20,20,20,0));
+}
+.card-c .card-copy .card-no,
+.card-c .card-copy .card-title,
+.card-c .card-copy .card-meta{ color:#fff; }
+.card-c .card-copy .card-meta{ color:var(--gray); }
+.card-c .card-copy .card-no{ letter-spacing:.24em; }
+.card-c .card-copy .card-title{ font-size:19px; letter-spacing:.02em; }
+.card-c .card-copy .card-meta{ font-size:11px; letter-spacing:.06em; }
+
+@media (max-width: 600px){
+  .grid{ grid-template-columns:1fr; }
+  .card-c .card-visual{ height:280px; }
+}
+</style>
+</head>
+<body>
+<h1 class="page-title">目录卡片 · 构图草案</h1>
+<p class="page-sub">方案 0 = 当前版 · A / B / C 为三个新方向，选定后我直接替换到目录页</p>
+
+<div class="grid">
+  <!-- 当前版 -->
+  <section class="draft-card">
+    <h2 class="draft-tag">方案 0 · 当前版</h2>
+    <div class="card">
+      <span class="card-no">第1章</span>
+      <span class="card-title">装进我的背包里</span>
+      <span class="card-meta">共 1 件展品</span>
+      <span class="card-visual"><span class="badge-circle"><img src="Chapter_1/Chapter_page/chapter_bag.png" alt="背包"></span></span>
+    </div>
+    <p class="draft-note">小圆章贴标：书包被压得太小、黑色在暗底上不突出，完整性和存在感都不够。</p>
+  </section>
+
+  <!-- 方案A -->
+  <section class="draft-card">
+    <h2 class="draft-tag">方案 A · 展柜式</h2>
+    <div class="card card-a">
+      <span class="card-no">第1章</span>
+      <span class="card-title">装进我的背包里</span>
+      <span class="card-meta">共 1 件展品</span>
+      <span class="card-visual glass-visual"><img src="Chapter_1/Chapter_page/chapter_bag.png" alt="背包"></span>
+    </div>
+    <p class="draft-note">磨砂玻璃展柜 + 大图：书包在带光感的半透明玻璃上浮现，整包完整可见，避免死白，更有展厅质感。</p>
+  </section>
+
+  <!-- 方案B -->
+  <section class="draft-card">
+    <h2 class="draft-tag">方案 B · 大徽章式</h2>
+    <div class="card card-b">
+      <span class="card-visual"><span class="badge-big glass-visual"><img src="Chapter_1/Chapter_page/chapter_bag.png" alt="背包"></span></span>
+      <span class="card-no">第1章</span>
+      <span class="card-title">装进我的背包里</span>
+      <span class="card-meta">共 1 件展品</span>
+    </div>
+    <p class="draft-note">玻璃圆徽：延续徽章语言，磨砂玻璃底比白底更柔和，书包仍是圆形内的小图。</p>
+  </section>
+
+  <!-- 方案C -->
+  <section class="draft-card">
+    <h2 class="draft-tag">方案 C · 封面海报式</h2>
+    <div class="card card-c">
+      <div class="card-visual glass-visual">
+        <img src="Chapter_1/Chapter_page/chapter_bag.png" alt="背包">
+        <div class="card-copy">
+          <span class="card-no">第1章</span>
+          <span class="card-title">装进我的背包里</span>
+          <span class="card-meta">共 1 件展品</span>
+        </div>
+      </div>
+    </div>
+    <p class="draft-note">玻璃封面海报：书包最大最抢眼，文字用底部渐变压住，玻璃质感贯穿，最有“博物馆展册”气质。</p>
+  </section>
+</div>
+</body>
+</html>

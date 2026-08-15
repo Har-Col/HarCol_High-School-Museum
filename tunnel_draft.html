@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>隧道过渡特效 · 草稿</title>
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; background:#050505; color:#E9E9E4; font-family:"HarmonyOS Sans SC","Microsoft YaHei",sans-serif; overflow:hidden; }
+
+  .bar{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px;
+    background:rgba(10,10,10,.72);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    font-size:13px; letter-spacing:.18em;
+  }
+  .bar b{ color:#fff; font-weight:600; }
+  .bar nav{ display:flex; align-items:center; gap:10px; }
+  .bar button{
+    appearance:none; border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.04); color:#CFCFC8;
+    font-size:12px; letter-spacing:.14em;
+    padding:7px 16px; border-radius:999px; cursor:pointer;
+    transition:all .25s;
+  }
+  .bar button:hover{ border-color:rgba(255,255,255,.5); color:#fff; }
+  .bar button.on{ background:#fff; color:#000; border-color:#fff; font-weight:600; }
+  .bar button.replay{ border-color:rgba(255,255,255,.35); }
+
+  .stage{ position:fixed; inset:0; display:none; }
+  .stage.on{ display:block; }
+  .stage canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  .hint{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%);
+    z-index:40; color:rgba(255,255,255,.34);
+    font-size:12px; letter-spacing:.2em; text-align:center;
+    pointer-events:none;
+  }
+
+  /* ============ 方案 A：光洞 ============ */
+  .tunnel-a{ position:absolute; inset:0; background:#000; overflow:hidden; }
+  .tunnel-a .core{
+    position:absolute; left:50%; top:50%;
+    width:70vmin; height:70vmin; margin:-35vmin 0 0 -35vmin;
+    border-radius:50%;
+    background:radial-gradient(circle,
+      rgba(255,255,255,1) 0%,
+      rgba(255,255,255,.85) 16%,
+      rgba(255,255,255,.32) 34%,
+      rgba(255,255,255,.07) 52%,
+      rgba(255,255,255,0) 68%);
+    filter:blur(2px);
+    transform:scale(.02);
+    animation:coreFly 3.6s cubic-bezier(.14,.75,.28,1) infinite;
+  }
+  .tunnel-a .core2{
+    position:absolute; left:50%; top:50%;
+    width:44vmin; height:44vmin; margin:-22vmin 0 0 -22vmin;
+    border-radius:50%;
+    background:radial-gradient(circle,
+      rgba(255,255,255,1) 0%,
+      rgba(255,255,255,.9) 14%,
+      rgba(255,255,255,.22) 40%,
+      rgba(255,255,255,0) 62%);
+    filter:blur(7px);
+    transform:scale(.02);
+    animation:coreFly2 3.6s cubic-bezier(.14,.75,.28,1) infinite;
+  }
+  @keyframes coreFly{
+    0%  { transform:scale(.02); opacity:0; }
+    16% { opacity:1; }
+    100%{ transform:scale(7.5); opacity:1; }
+  }
+  @keyframes coreFly2{
+    0%  { transform:scale(.02); opacity:0; }
+    10% { opacity:.9; }
+    100%{ transform:scale(10); opacity:1; }
+  }
+  .tunnel-a .ring{
+    position:absolute; left:50%; top:50%;
+    width:64vmin; height:64vmin; margin:-32vmin 0 0 -32vmin;
+    border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.5);
+    box-shadow:0 0 22px 3px rgba(255,255,255,.22), inset 0 0 18px rgba(255,255,255,.12);
+    transform:scale(.06);
+    opacity:0;
+    animation:ringFly 1.5s cubic-bezier(.2,.6,.3,1) infinite;
+  }
+  .tunnel-a .ring.soft{
+    border-width:.5px;
+    border-color:rgba(255,255,255,.16);
+    box-shadow:0 0 46px 6px rgba(255,255,255,.12);
+  }
+  @keyframes ringFly{
+    0%  { transform:scale(.06); opacity:0; }
+    12% { opacity:.85; }
+    100%{ transform:scale(8.5); opacity:0; }
+  }
+  .tunnel-a .ray{
+    position:absolute; left:50%; top:50%;
+    width:62vmin; height:2px; margin:0;
+    transform-origin:0 50%;
+    border-radius:2px;
+    opacity:0;
+    animation:rayFly 1.1s cubic-bezier(.16,.72,.3,1) infinite;
+  }
+  @keyframes rayFly{
+    0%  { transform:rotate(var(--a)) scaleX(.12); opacity:0; }
+    14% { opacity:.6; }
+    100%{ transform:rotate(var(--a)) scaleX(1.05); opacity:0; }
+  }
+  .tunnel-a .dust{
+    position:absolute; inset:-12%;
+    opacity:.13;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:dustMove .4s steps(3) infinite;
+    mix-blend-mode:screen;
+  }
+  @keyframes dustMove{
+    0%{ transform:translate(0,0); }
+    33%{ transform:translate(-2%,1%); }
+    66%{ transform:translate(1%,-2%); }
+    100%{ transform:translate(0,0); }
+  }
+  .tunnel-a .vig{
+    position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 34%, rgba(0,0,0,.55) 62%, rgba(0,0,0,.96) 100%);
+  }
+  .tunnel-a .flash{
+    position:absolute; inset:0; background:#fff; opacity:0;
+    animation:flashW 3.6s ease-in infinite;
+  }
+  @keyframes flashW{
+    0%, 80%{ opacity:0; }
+    91%  { opacity:.85; }
+    100% { opacity:1; }
+  }
+
+  .stage-title{
+    position:fixed; top:74px; left:22px; z-index:45;
+    font-size:12px; letter-spacing:.22em; color:rgba(255,255,255,.4);
+    pointer-events:none;
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <b>隧道过渡 · 特效草稿</b>
+  <nav>
+    <button data-v="a" class="on">A · 光洞</button>
+    <button data-v="b">B · 粒子飞驰</button>
+    <button data-v="c">C · 光速线</button>
+    <button data-v="d">D · WebGL 光速</button>
+    <button id="replay" class="replay">↻ 重播</button>
+  </nav>
+</header>
+
+<p class="stage-title" id="stageTitle">A · 柔和光洞：多层辉光圆环 + 放射速度线 + 胶片颗粒 + 暗角</p>
+
+<section id="stage-a" class="stage on">
+  <div class="tunnel-a" id="tunnelA">
+    <div class="core"></div>
+    <div class="core2"></div>
+  </div>
+</section>
+
+<section id="stage-b" class="stage"><canvas id="cvB"></canvas></section>
+<section id="stage-c" class="stage"><canvas id="cvC"></canvas></section>
+<section id="stage-d" class="stage"><canvas id="cvD"></canvas></section>
+
+<p class="hint">点击顶部按钮切换方案 · ↻ 随时重播</p>
+
+<script>
+/* ---------- 方案切换 ---------- */
+const btns = Array.from(document.querySelectorAll(".bar button[data-v]"));
+const stages = { a: document.getElementById("stage-a"), b: document.getElementById("stage-b"), c: document.getElementById("stage-c"), d: document.getElementById("stage-d") };
+const titles = {
+  a: "A · 柔和光洞：多层辉光圆环 + 放射速度线 + 胶片颗粒 + 暗角",
+  b: "B · 粒子飞驰：数百光粒从中心穿出，三层光晕拖尾，纵深穿越",
+  c: "C · 光速线：放射光束 + 星芒 + 中心过曝，强穿透力",
+  d: "D · WebGL 光速隧道：GPU 粒子流 + 光雾 + 星芒 + 中心过曝，电影级"
+};
+let cur = "a";
+function setView(v){
+  cur = v;
+  btns.forEach(b => b.classList.toggle("on", b.dataset.v === v));
+  Object.keys(stages).forEach(k => stages[k].classList.toggle("on", k === v));
+  document.getElementById("stageTitle").textContent = titles[v];
+  if (v === "b") resetB();
+  if (v === "c") resetC();
+  if (v === "d") resetD();
+  if (v !== "b"){ bRunning = false; cancelAnimationFrame(bRaf); }
+  if (v !== "c"){ cRunning = false; cancelAnimationFrame(cRaf); }
+  if (v !== "d"){ dRunning = false; cancelAnimationFrame(dRaf); }
+}
+btns.forEach(b => b.addEventListener("click", () => setView(b.dataset.v)));
+document.getElementById("replay").addEventListener("click", () => {
+  if (cur === "a") restartA();
+  if (cur === "b") resetB();
+  if (cur === "c") resetC();
+  if (cur === "d") resetD();
+});
+
+/* ---------- 方案 A：CSS 光洞 ---------- */
+const tunnelA = document.getElementById("tunnelA");
+function restartA(){
+  const wrap = tunnelA;
+  wrap.querySelectorAll(".ring,.ray").forEach(el => el.remove());
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 9; i++){
+    const r = document.createElement("div");
+    r.className = "ring" + (i % 3 === 0 ? " soft" : "");
+    r.style.animationDelay = (i * .17) + "s";
+    frag.appendChild(r);
+  }
+  for (let i = 0; i < 18; i++){
+    const ray = document.createElement("div");
+    ray.className = "ray";
+    const a = (i / 18) * 360 + ((i * 37) % 13);
+    ray.style.setProperty("--a", a + "deg");
+    ray.style.background = "linear-gradient(90deg, rgba(255,255,255,.9), rgba(255,255,255,.25) 55%, rgba(255,255,255,0))";
+    ray.style.animationDelay = (Math.random() * .55) + "s";
+    frag.appendChild(ray);
+  }
+  const dust = document.createElement("div"); dust.className = "dust"; frag.appendChild(dust);
+  const vig = document.createElement("div"); vig.className = "vig"; frag.appendChild(vig);
+  const flash = document.createElement("div"); flash.className = "flash"; frag.appendChild(flash);
+  wrap.appendChild(frag);
+}
+restartA();
+
+/* ---------- Canvas 通用 ---------- */
+function fitCanvas(cv){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.parentElement.clientWidth, h = cv.parentElement.clientHeight;
+  if (cv.width !== w * dpr){ cv.width = w * dpr; cv.height = h * dpr; }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h, cx: w / 2, cy: h / 2, rmax: Math.hypot(w, h) / 2 };
+}
+
+/* 预渲染辉光圆点 */
+function makeGlow(){
+  const s = document.createElement("canvas");
+  s.width = 128; s.height = 128;
+  const c = s.getContext("2d");
+  const g = c.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(0.22, "rgba(255,255,255,.62)");
+  g.addColorStop(0.55, "rgba(255,255,255,.14)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  c.fillStyle = g;
+  c.fillRect(0, 0, 128, 128);
+  return s;
+}
+const GLOW = makeGlow();
+
+/* ---------- 方案 B：粒子飞驰 ---------- */
+const cvB = document.getElementById("cvB");
+let bParts = [];
+let bT = 0;
+let bRunning = true;
+let bRaf = 0;
+
+function resetB(){
+  bParts = [];
+  bT = 0;
+  if (!bRunning){
+    bRunning = true;
+    requestAnimationFrame(loopB);
+  }
+}
+
+function loopB(ts){
+  const { ctx, w, h, cx, cy, rmax } = fitCanvas(cvB);
+  const dt = 1 / 60;
+  bT += dt;
+  const T = 3.6, cycle = T + .7;
+  const t = bT % cycle;
+
+  if (t < T){
+    ctx.clearRect(0, 0, w, h);
+
+    // 持续发射粒子
+    if (bParts.length < 1000){
+      for (let i = 0; i < 6; i++){
+        const a = Math.random() * Math.PI * 2;
+        bParts.push({
+          a,
+          r: 0,
+          sp: (300 + Math.random() * 620) * (0.85 + t / T * .5),
+          size: .6 + Math.random() * 1.4,
+          life: 0
+        });
+      }
+    }
+
+    ctx.globalCompositeOperation = "lighter";
+    // 中心光核（三层：外光雾 + 内光晕 + 核心白点）
+    const coreR = (20 + t / T * 180);
+    ctx.globalAlpha = .38;
+    ctx.drawImage(GLOW, cx - coreR * 1.8, cy - coreR * 1.8, coreR * 3.6, coreR * 3.6);
+    ctx.globalAlpha = .8;
+    ctx.drawImage(GLOW, cx - coreR, cy - coreR, coreR * 2, coreR * 2);
+    ctx.globalAlpha = 1;
+    const coreR2 = (6 + t / T * 48);
+    ctx.drawImage(GLOW, cx - coreR2, cy - coreR2, coreR2 * 2, coreR2 * 2);
+
+    // 推进粒子
+    for (let i = bParts.length - 1; i >= 0; i--){
+      const p = bParts[i];
+      p.r += p.sp * dt;
+      p.life += dt;
+      const norm = p.r / rmax;
+      if (norm >= 1.12 || p.life > 2.7){ bParts.splice(i, 1); continue; }
+      const x = cx + Math.cos(p.a) * p.r;
+      const y = cy + Math.sin(p.a) * p.r;
+      const tail = Math.min(p.sp * dt * 5, p.r);
+      const px0 = cx + Math.cos(p.a) * (p.r - tail);
+      const py0 = cy + Math.sin(p.a) * (p.r - tail);
+
+      // 拖尾辉光：三层光晕线
+      const fade = Math.sin(Math.min(norm * 1.15, 1) * Math.PI);
+      const alpha = .06 + fade * .7;
+      const width = Math.max(.7, p.size * (0.7 + norm * 3));
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "rgba(255,255,255," + (alpha * .2).toFixed(3) + ")";
+      ctx.lineWidth = width * 8;
+      ctx.beginPath();
+      ctx.moveTo(px0, py0);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255," + (alpha * .5).toFixed(3) + ")";
+      ctx.lineWidth = width * 3;
+      ctx.beginPath();
+      ctx.moveTo(px0, py0);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255," + (alpha * 1.15).toFixed(3) + ")";
+      ctx.lineWidth = width * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(px0, py0);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+
+      // 辉光点
+      if (i % 3 === 0){
+        const s = p.size * (3 + norm * 9);
+        ctx.drawImage(GLOW, x - s, y - s, s * 2, s * 2);
+      }
+    }
+    ctx.globalCompositeOperation = "source-over";
+
+    // 边缘暗角
+    const vg = ctx.createRadialGradient(cx, cy, rmax * .34, cx, cy, rmax);
+    vg.addColorStop(0, "rgba(0,0,0,0)");
+    vg.addColorStop(.72, "rgba(0,0,0,0)");
+    vg.addColorStop(1, "rgba(0,0,0,.88)");
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    // 黑场 + 白闪过渡（循环回放时）
+    const fadeT = t - T;
+    ctx.globalCompositeOperation = "source-over";
+    if (fadeT < .35){
+      ctx.fillStyle = "rgba(0,0,0," + (1 - fadeT / .35).toFixed(3) + ")";
+      ctx.fillRect(0, 0, w, h);
+    } else if (fadeT < .55){
+      ctx.fillStyle = "rgba(255,255,255," + ((fadeT - .35) / .2).toFixed(3) + ")";
+      ctx.fillRect(0, 0, w, h);
+    } else {
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, w, h);
+    }
+  }
+
+  if (bRunning) bRaf = requestAnimationFrame(loopB);
+}
+resetB();
+
+/* ---------- 方案 C：光速线 ---------- */
+const cvC = document.getElementById("cvC");
+let cRaf = 0;
+let cRunning = false;
+let cT = 0;
+
+const C_RAYS = [];
+for (let i = 0; i < 30; i++){
+  C_RAYS.push({
+    a: (i / 30) * Math.PI * 2 + Math.random() * .18,
+    dur: .9 + Math.random() * .7,
+    delay: Math.random() * 1.1,
+    width: .7 + Math.random() * 1.6,
+    bright: .5 + Math.random() * .5
+  });
+}
+const C_STARS = [0, 90, 180, 270, 45, 135, 225, 315].map((deg, i) => ({
+  a: deg * Math.PI / 180,
+  len: i < 4 ? 1.15 : .82,
+  width: i < 4 ? 2.6 : 1.6
+}));
+
+function resetC(){ cT = 0; if (!cRunning){ cRunning = true; requestAnimationFrame(loopC); } }
+
+function loopC(){
+  const { ctx, w, h, cx, cy, rmax } = fitCanvas(cvC);
+  const dt = 1 / 60;
+  cT += dt;
+  const T = 3.4, cycle = T + .7;
+  const t = cT % cycle;
+
+  ctx.globalCompositeOperation = "source-over";
+  if (t < T){
+    ctx.fillStyle = "rgba(0,0,0," + (0.10).toFixed(3) + ")";
+    ctx.fillRect(0, 0, w, h);
+
+    const ease = x => 1 - Math.pow(1 - x, 3);
+    ctx.globalCompositeOperation = "lighter";
+
+    // 放射光束
+    for (const ray of C_RAYS){
+      const p = (t - ray.delay) / ray.dur;
+      if (p < 0 || p > 1.35) continue;
+      const len = ease(Math.min(p, 1)) * rmax * 1.3;
+      const ex = cx + Math.cos(ray.a) * len;
+      const ey = cy + Math.sin(ray.a) * len;
+      const alpha = Math.sin(Math.min(p, 1) * Math.PI) * .8 * ray.bright;
+      const grad = ctx.createLinearGradient(cx, cy, ex, ey);
+      grad.addColorStop(0, "rgba(255,255,255,.75)");
+      grad.addColorStop(.7, "rgba(255,255,255," + (alpha * .42).toFixed(3) + ")");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.strokeStyle = grad;
+      // 光晕层
+      ctx.lineWidth = ray.width * 6;
+      ctx.globalAlpha = .18;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      // 主光束
+      ctx.lineCap = "round";
+      ctx.lineWidth = ray.width * 2.1;
+      ctx.globalAlpha = .5;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = ray.width;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+
+    // 星芒（长亮光束）
+    for (const st of C_STARS){
+      const len = ease(Math.min(t / .7, 1)) * rmax * st.len;
+      const ex = cx + Math.cos(st.a) * len;
+      const ey = cy + Math.sin(st.a) * len;
+      const alpha = .5 + .4 * Math.sin(Math.min(t / T * 2.4, 1) * Math.PI);
+      // 辉光叠加
+      ctx.strokeStyle = "rgba(255,255,255," + (alpha * .16).toFixed(3) + ")";
+      ctx.lineWidth = st.width * 9;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255," + (alpha * .4).toFixed(3) + ")";
+      ctx.lineWidth = st.width * 2.4;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255," + alpha.toFixed(3) + ")";
+      ctx.lineWidth = st.width * .8;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+
+    // 中心光核（两层，柔和过曝）
+    const coreR = 12 + t / T * 78;
+    ctx.globalAlpha = .8;
+    ctx.drawImage(GLOW, cx - coreR * 2, cy - coreR * 2, coreR * 4, coreR * 4);
+    ctx.globalAlpha = 1;
+    const coreR2 = 6 + t / T * 34;
+    ctx.drawImage(GLOW, cx - coreR2, cy - coreR2, coreR2 * 2, coreR2 * 2);
+
+    // 边缘暗角
+    const vg = ctx.createRadialGradient(cx, cy, rmax * .4, cx, cy, rmax);
+    vg.addColorStop(0, "rgba(0,0,0,0)");
+    vg.addColorStop(1, "rgba(0,0,0,.9)");
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = "source-over";
+  } else {
+    const fadeT = t - T;
+    if (fadeT < .35){
+      ctx.fillStyle = "rgba(0,0,0," + (1 - fadeT / .35).toFixed(3) + ")";
+      ctx.fillRect(0, 0, w, h);
+    } else if (fadeT < .55){
+      ctx.fillStyle = "rgba(255,255,255," + ((fadeT - .35) / .2).toFixed(3) + ")";
+      ctx.fillRect(0, 0, w, h);
+    } else {
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, w, h);
+    }
+  }
+  if (cRunning) cRaf = requestAnimationFrame(loopC);
+}
+resetC();
+
+/* ---------- 方案 D：WebGL 光速隧道 ---------- */
+const cvD = document.getElementById("cvD");
+let dT = 0;
+let dRunning = false;
+let dRaf = 0;
+let dReady = false;
+let glD = null;
+let uTimeD = null, uFlashD = null, uResD = null;
+
+const D_FS = `
+precision highp float;
+uniform vec2 u_res;
+uniform float u_time;
+uniform float u_flash;
+
+vec2 hash(vec2 p){
+  p = fract(p * vec2(123.34, 456.21));
+  p += dot(p, p + 45.32);
+  return fract(vec2(p.x * p.y, p.y * p.x));
+}
+float noise(vec2 p){
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash(i).x;
+  float b = hash(i + vec2(1.0, 0.0)).x;
+  float c = hash(i + vec2(0.0, 1.0)).x;
+  float d = hash(i + vec2(1.0, 1.0)).x;
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+float fbm(vec2 p){
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 4; i++){
+    v += a * noise(p);
+    p = p * 2.03 + vec2(7.7, 3.1);
+    a *= 0.5;
+  }
+  return v;
+}
+
+// 白圈隧道亮度：圈内纯白，圈边缘辉光，圈外隧道壁（流线/环/粒子）
+float tunnelLum(float rv, float ang, float t, float R){
+  // 白圈内部：全白过曝
+  float inside = 1.0 - smoothstep(R - 0.05, R + 0.05, rv);
+  // 圈边缘辉光
+  float edge = exp(-abs(rv - R) * 8.0) * 0.55;
+
+  // 圈外隧道壁
+  float wall = 0.0;
+  float d = rv - R;
+  if (d > 0.0){
+    // 径向流线（向中心吸入）
+    for (int i = 0; i < 5; i++){
+      float li = float(i);
+      float speed = 7.0 + li * 4.0;
+      float freq = 12.0 + li * 7.0;
+      float ph = d * freq - t * speed
+               + fbm(vec2(cos(ang) * 3.0 + li * 19.0, sin(ang) * 3.0 + li * 7.0)) * 1.8;
+      wall += pow(max(sin(ph), 0.0), 10.0) * (0.34 / (1.0 + li * 0.35));
+    }
+    // 同心环（隧道壁截面）
+    float ringW = sin(d * 22.0 - t * 9.0
+                    + fbm(vec2(cos(ang) * 4.0, sin(ang) * 4.0 + t * 0.5)) * 3.0);
+    wall += pow(max(ringW, 0.0), 5.0) * 0.14;
+    // 飞驰粒子
+    float px = cos(ang) * d;
+    float py = sin(ang) * d;
+    vec2 g = vec2(floor(px * 58.0), floor(py * 58.0 - t * 7.0));
+    float h = hash(g).x;
+    float line = fract(py * 58.0 - t * 7.0);
+    float dotw = smoothstep(0.965, 1.0, line) * step(0.992, h);
+    wall += dotw * 0.55;
+    // 远处衰减
+    wall *= exp(-d * 0.32);
+  }
+  wall *= smoothstep(0.0, 0.06, d);
+  return inside + edge + wall;
+}
+
+void main(){
+  vec2 uv = (gl_FragCoord.xy * 2.0 - u_res) / min(u_res.x, u_res.y);
+  // 轻微桶形畸变（广角镜头视角）
+  uv *= 1.0 + 0.045 * dot(uv, uv);
+  float r = length(uv);
+  float ang = atan(uv.y, uv.x);
+  float t = u_time;
+
+  // 白圈半径：从隧道尽头的极小光点，逐步扩大到充满屏幕
+  float prog = smoothstep(0.0, 3.6, t);
+  float R = mix(0.018, 2.35, pow(prog, 1.15));
+
+  // 径向色差：中心轻微、边缘明显（真实镜头色差）
+  float ca = (0.004 + 0.008 * r * r) * smoothstep(0.0, 1.6, r);
+  float rR = r - ca;
+  float rB = r + ca;
+
+  float lr = tunnelLum(rR, ang, t, R);
+  float lg = tunnelLum(r, ang, t, R);
+  float lb = tunnelLum(rB, ang, t, R);
+
+  vec3 col = vec3(lr, lg, lb);
+
+  // 镜头渐晕
+  col *= mix(1.0, 0.42, smoothstep(0.85, 2.0, r));
+
+  // 胶片颗粒
+  col += (hash(gl_FragCoord.xy * 0.37 + vec2(t * 67.0, t * 31.0)).x - 0.5) * 0.03;
+
+  // 轻微镜头呼吸闪烁
+  col *= 0.99 + 0.01 * sin(t * 23.0);
+
+  // 结尾白闪
+  col = mix(col, vec3(1.0), u_flash);
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+const smooth = (x, a, b) => {
+  const k = Math.min(Math.max((x - a) / (b - a), 0), 1);
+  return k * k * (3 - 2 * k);
+};
+
+function initD(){
+  if (dReady) return true;
+  const gl = cvD.getContext("webgl", { antialias: false, alpha: false, premultipliedAlpha: false })
+          || cvD.getContext("experimental-webgl");
+  if (!gl){
+    document.getElementById("stageTitle").textContent = "D · 当前浏览器不支持 WebGL，请用 Chrome/Edge";
+    return false;
+  }
+  const compile = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+      console.error("shader error:", gl.getShaderInfoLog(s));
+      return null;
+    }
+    return s;
+  };
+  const vs = "attribute vec2 a_pos; void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }";
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, D_FS));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+    console.error("link error:", gl.getProgramInfoLog(prog));
+    return false;
+  }
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, "a_pos");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  uTimeD = gl.getUniformLocation(prog, "u_time");
+  uFlashD = gl.getUniformLocation(prog, "u_flash");
+  uResD = gl.getUniformLocation(prog, "u_res");
+  glD = gl;
+  dReady = true;
+  return true;
+}
+
+function fitD(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.floor(cvD.parentElement.clientWidth * dpr);
+  const h = Math.floor(cvD.parentElement.clientHeight * dpr);
+  if (cvD.width !== w || cvD.height !== h){
+    cvD.width = w;
+    cvD.height = h;
+  }
+  glD.viewport(0, 0, cvD.width, cvD.height);
+}
+
+function resetD(){
+  dT = 0;
+  if (!dRunning){
+    dRunning = true;
+    requestAnimationFrame(loopD);
+  }
+}
+
+function loopD(){
+  if (!dReady && !initD()){
+    dRunning = false;
+    return;
+  }
+  fitD();
+  dT += 1 / 60;
+  const T = 3.6, cycle = T + .7;
+  const t = dT % cycle;
+  let flash = 0;
+  if (t >= T) flash = 1;
+  else flash = smooth(t, 3.15, 3.55);
+  glD.uniform2f(uResD, cvD.width, cvD.height);
+  glD.uniform1f(uTimeD, t);
+  glD.uniform1f(uFlashD, flash);
+  glD.drawArrays(glD.TRIANGLES, 0, 3);
+  if (dRunning) dRaf = requestAnimationFrame(loopD);
+}
+
+window.addEventListener("resize", () => { fitCanvas(cvB); fitCanvas(cvC); });
+</script>
+</body>
+</html>
