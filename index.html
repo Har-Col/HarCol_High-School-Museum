@@ -1706,6 +1706,7 @@ body.lb-open{ overflow:hidden; }
   .chapter-title, .item-labelbar{ margin-top:20vh; }
   .item-labelbar{ margin-top:2vh; }
   .directory{ padding-top:12vh; }
+  .directory{ padding-top:8vh; }
   .dir-grid{ grid-template-columns:1fr; }
   .chapter{ padding-bottom:8vh; }
   .float-thumb, .bag-frame .leader{ display:none; }
@@ -1751,6 +1752,81 @@ body.lb-open{ overflow:hidden; }
   .watermark-band span{ -webkit-text-stroke-width:.8px; }
   .end-exit{ right:5vw; bottom:4vh; }
   .exit-sign img{ width:118px; }
+
+  /* ---- 手机端排版优化 ---- */
+  .topbar{ padding:10px 16px; }
+  .topbar a{ font-size:11px; letter-spacing:.2em; }
+  .topbar-links{ gap:14px; }
+  .cover-bgword{
+    left:6vw; top:calc(36vh - 20px - 19.8vw);
+    transform:none;
+    text-align:left;
+    font-size:22vw;
+  }
+  .cover-main{ top:36%; }
+  .cover-title{ font-size:clamp(28px, 7.6vw, 40px); }
+  .cover-meta{ font-size:11px; letter-spacing:.16em; margin-top:12px; }
+  .cover-line{ left:12vw; right:12vw; top:56%; }
+  .cover-next{ right:8vw; top:56%; transform:translateY(-50%); font-size:13px; }
+  .cover-mascot{ right:4vw; bottom:4vh; }
+  .cover-mascot img{ width:54px; height:54px; }
+  .dir-card{ padding:18px; }
+  .dir-visual{ height:auto; min-height:170px; }
+  .dir-visual img{ max-height:30vh; }
+  .drawer-handle{
+    left:auto; right:14px; top:auto; bottom:16px;
+    writing-mode:horizontal-tb;
+    transform:none;
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:999px;
+    padding:10px 18px;
+    font-size:12px;
+  }
+  .chapter-title, .item-labelbar{ margin-top:12vh; }
+  .bag-media img{ max-height:24vh; }
+  .item-media img{ max-height:24vh; }
+  .item-media.g3 img, .item-media.g4 img{ max-height:16vh; }
+  .summary{ font-size:13px; line-height:1.8; max-width:88%; }
+  .num-badge{ width:32px; height:32px; font-size:14px; }
+  .item-stamp{ left:10px; bottom:8px; font-size:11px; padding:3px 8px; }
+  .zoom-hint{ left:auto; right:12px; bottom:8px; transform:none; font-size:11px; padding:6px 12px; }
+  .info-panel{ padding:24px 18px; }
+  .info-text{ font-size:16px; line-height:1.9; }
+  .label-no{ font-size:12px; }
+  .label-name{ font-size:19px; }
+  .end-photo img{ max-height:46vh; }
+  .end-watermark{
+    font-size:20vw; top:calc(22vh + 9px);
+  }
+  .end-exit{ right:4vw; bottom:3vh; gap:10px; }
+  .end-thanks{ font-size:11px; }
+  .end-guide{ font-size:10px; }
+  .exit-sign img{ width:96px; }
+  .aw-card-inner{ padding:22px 18px; }
+  .aw-title{ font-size:clamp(26px, 7.5vw, 34px); }
+  .aw-body p{ font-size:15px; line-height:1.95; margin-bottom:1em; }
+  .aw-bg{ opacity:.32; }
+  .back-light{ font-size:12px; top:14px; left:16px; }
+  .ach-toasts{
+    top:92px; left:auto; right:14px;
+    transform:none;
+    align-items:flex-end; width:auto; max-width:78%;
+  }
+  .ach-toast{ padding:8px 12px; gap:9px; border-radius:12px; max-width:100%; }
+  .ach-toast-icon{ width:34px; height:34px; font-size:17px; }
+  .ach-toast-name{ font-size:14px; }
+  .ach-toast-desc{ font-size:11px; line-height:1.5; }
+  .ach-toast-how{ font-size:10px; }
+  .afterword-page{ padding-top:8vh; }
+  .toasts{ top:auto; bottom:44px; }
+}
+
+@media (max-width: 480px){
+  .dir-grid{ gap:16px; }
+  .item-nav{ flex-wrap:wrap; gap:8px; }
+  .next-chapter-btn{ font-size:12px; padding:10px 18px; }
+  .info-text{ max-height:22vh; }
+  .end-saying{ font-size:13px; letter-spacing:.3em; text-indent:.3em; }
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -2304,6 +2380,10 @@ function showToast(msg, big){
 function showAchievement(ach){
   const box = document.getElementById("achToasts");
   if (!box) return;
+  /* 手机端：最多同时显示 2 个，避免堆叠遮挡 */
+  if (window.innerWidth <= 760){
+    while (box.children.length >= 1) box.firstChild.remove();
+  }
   const tpl = document.getElementById("achToastTpl");
   const el = tpl.content.firstElementChild.cloneNode(true);
   el.querySelector(".ach-toast-icon").textContent = ach.icon;
@@ -2316,7 +2396,7 @@ function showAchievement(ach){
   setTimeout(() => {
     el.classList.remove("show");
     setTimeout(() => el.remove(), 400);
-  }, 5200);
+  }, window.innerWidth <= 760 ? 3800 : 5200);
 }
 function tryEarn(ach, st){
   if (!ach || st.achievements.indexOf(ach.id) > -1) return;
@@ -3276,6 +3356,8 @@ function showView(id){
   const showDrawer = runState().completed && !(id === "view-cover" || id === "view-end" || id === "view-afterword");
   drawer.classList.toggle("enabled", showDrawer);
   drawerHandle.classList.toggle("enabled", showDrawer);
+  /* 手机端展品页隐藏右下角手柄，避免与底部切换按钮重叠 */
+  drawerHandle.style.display = (isItem && window.innerWidth <= 760) ? "none" : "";
   if (!showDrawer || !isItem){
     drawer.classList.remove("open");
   } else {
