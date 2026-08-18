@@ -2,6 +2,9 @@
 《高中生活博物馆》是我用codex接入DeepSeek api制作的一款轻量化纯静态纪念网页，基于 HTML、CSS、JavaScript 开发，部署于 GitHub Pages。
 项目以博物馆存档为核心创意，记录高中日常碎片、专属回忆
 
+https://har-col.github.io/HarCol_High-School-Museum/
+
+
 ## ⚙️小功能
 -成就系统
 -图片景深效果
