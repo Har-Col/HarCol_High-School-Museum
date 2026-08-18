@@ -1917,6 +1917,8 @@ body.lb-open{ overflow:hidden; }
 }
 .side-fig{
   margin:40px auto;
+  position:relative;
+  cursor:zoom-in;
 }
 .side-fig img{
   width:100%;
@@ -1931,8 +1933,26 @@ body.lb-open{ overflow:hidden; }
   color:var(--gray-dim);
   font-size:12px; letter-spacing:.22em;
 }
+.side-fig::after{
+  content:"单击放大";
+  position:absolute; left:50%; bottom:16px;
+  transform:translateX(-50%);
+  background:rgba(10,10,10,.62);
+  border:1px solid rgba(255,255,255,.18);
+  color:#F0F0EA;
+  font-size:12px; letter-spacing:.2em; text-indent:.2em;
+  padding:6px 14px;
+  border-radius:999px;
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity .3s;
+  pointer-events:none;
+  z-index:2;
+}
+.side-fig:hover::after{ opacity:1; }
 .fig-3{ max-width:720px; }
 .fig-1, .fig-2{ max-width:430px; margin-left:auto; margin-right:auto; }
+.fig-end{ max-width:380px; }
 .side-foot{
   margin-top:44px;
   text-align:center;
@@ -2050,6 +2070,10 @@ body.lb-open{ overflow:hidden; }
         <p>此外我还注意到，我在翻倒瓶身倒出果蝇时，瓶内的蛆似乎无所谓另一端的挤压与吵闹，依旧安生地蜷在淀粉糊里。</p>
         <p>不知道又是谁在瓶口系了个蝴蝶结，恶趣味就是这样式的。</p>
         <p class="side-sign">2025年4月10‑11日</p>
+        <figure class="side-fig fig-end">
+          <img src="Side_Story_1/End_image.png" alt="安生的蛆 · 结尾">
+          <figcaption>—— 完 ——</figcaption>
+        </figure>
         <div class="side-foot">
           <a class="side-back" href="#/directory">← 返回目录</a>
         </div>
@@ -3946,6 +3970,11 @@ function bindInteractions(){
     const extra = e.target.closest(".info-extra");
     if (extra){
       openLb(extra.dataset.full, extra.dataset.name || "配图", "");
+      return;
+    }
+    const sideImg = e.target.closest(".side-fig img");
+    if (sideImg){
+      openLb(sideImg.currentSrc || sideImg.src, sideImg.alt || "番外插图", "", "");
       return;
     }
     if (e.target.id === "lbClose" || e.target === lb){
